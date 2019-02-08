@@ -205,13 +205,14 @@ else ...
 
 phase_6 汇编码怎么这么长啊= =
 
-熟悉的 `read_six_numbers` ，读出的六个参数分别存放在 `0x0(%rsp), 0x4(%rsp), 0x8(%rsp), 0xc(%rsp), 0x10(%rsp), 0x14(%rsp) `，同时也在
-
-
+熟悉的 `read_six_numbers` ，读出的六个参数分别存放在 `0x0(%rsp), 0x4(%rsp), 0x8(%rsp), 0xc(%rsp), 0x10(%rsp), 0x14(%rsp) `，
 
 ```assembly
+________________________   Part 1    ________________________
 40110b:	49 89 e6             	mov    %rsp,%r14
 40110e:	41 bc 00 00 00 00    	mov    $0x0,%r12d
+
+Section_1:
 401114:	4c 89 ed             	mov    %r13,%rbp
 401117:	41 8b 45 00          	mov    0x0(%r13),%eax
 40111b:	83 e8 01             	sub    $0x1,%eax
@@ -222,6 +223,8 @@ phase_6 汇编码怎么这么长啊= =
 40112c:	41 83 fc 06          	cmp    $0x6,%r12d
 401130:	74 21                	je     401153 <phase_6+0x5f>
 401132:	44 89 e3             	mov    %r12d,%ebx
+
+Section2:
 401135:	48 63 c3             	movslq %ebx,%rax
 401138:	8b 04 84             	mov    (%rsp,%rax,4),%eax
 40113b:	39 45 00             	cmp    %eax,0x0(%rbp)
@@ -239,14 +242,183 @@ phase_6 汇编码怎么这么长啊= =
 ```c
 // %rsp,%r13,%rsi -第一个参数
 %r14 = %rsp;
-%r12d = %0x0;
-%rbp = %r13;
-%eax = %r13 - 1;
-if(%eax > 0x5)//无符号 >
-    explode();
-else{
-    %r12d += 1;
-    if()
-}
+i = 0;
+
+Section_1:
+    %rbp = %r13; //
+    %eax = %r13 - 1;
+    if(%eax > 0x5)//无符号 >
+        explode(); //要求每个参数：[0,5]
+    else{
+        i++;
+        if(i == 6)
+            goto Part_2;
+        else
+            j = i;
+    }
+Section_2:
+    %rax = j;
+    %eax = %rsp + 4 * %rax; // 依次取输入参数
+    if(%rbp == %eax) //要求：与该参数不相同
+       explode();
+    j ++;
+    if(j <= 5) 
+        goto Section_2;
+    %r13 += 4; //
+	goto Section_1;
 ```
 
+以上部分，要求每个参数取值$[1,6]$，且互不相同。
+
+```assembly
+________________________   Part 2    ________________________
+  401153:	48 8d 74 24 18       	lea    0x18(%rsp),%rsi
+  401158:	4c 89 f0             	mov    %r14,%rax
+  40115b:	b9 07 00 00 00       	mov    $0x7,%ecx
+  
+  Section_1:
+  401160:	89 ca                	mov    %ecx,%edx
+  401162:	2b 10                	sub    (%rax),%edx
+  401164:	89 10                	mov    %edx,(%rax)
+  401166:	48 83 c0 04          	add    $0x4,%rax
+  40116a:	48 39 f0             	cmp    %rsi,%rax
+  40116d:	75 f1                	jne    401160 <phase_6+0x6c>
+  40116f:	be 00 00 00 00       	mov    $0x0,%esi
+  401174:	eb 21                	jmp    401197 <phase_6+0xa3>
+  
+  Section_2:
+  401176:	48 8b 52 08          	mov    0x8(%rdx),%rdx
+  40117a:	83 c0 01             	add    $0x1,%eax
+  40117d:	39 c8                	cmp    %ecx,%eax
+  40117f:	75 f5                	jne    401176 <phase_6+0x82>
+  401181:	eb 05                	jmp    401188 <phase_6+0x94>
+  
+  Section_3:
+  401183:	ba d0 32 60 00       	mov    $0x6032d0,%edx
+  
+ Section_4:
+  401188:	48 89 54 74 20       	mov    %rdx,0x20(%rsp,%rsi,2)
+  40118d:	48 83 c6 04          	add    $0x4,%rsi
+  401191:	48 83 fe 18          	cmp    $0x18,%rsi
+  401195:	74 14                	je     4011ab <phase_6+0xb7>
+  
+Section_5:
+  401197:	8b 0c 34             	mov    (%rsp,%rsi,1),%ecx
+  40119a:	83 f9 01             	cmp    $0x1,%ecx
+  40119d:	7e e4                	jle    401183 <phase_6+0x8f>
+  40119f:	b8 01 00 00 00       	mov    $0x1,%eax
+  4011a4:	ba d0 32 60 00       	mov    $0x6032d0,%edx
+  4011a9:	eb cb                	jmp    401176 <phase_6+0x82>
+```
+
+先放弃思考，写出伪代码
+
+```c
+// %rsp,%r13,%r14,%rbp -第一个参数
+%rsi = %rsp + 0x18;
+%rax = %r14;
+
+Section_1: //对每一个参数，进行7减操作
+    %edx = 7 - (%rax);
+	%rax += 4;
+	if($rax != %rsi) 
+        goto Section_1;
+	i = 0;
+	goto Section_5;
+
+// 对于每一个参数，根据它的值，选取合适的 node 地址存放在%rsp+0x20的一段地址中
+Section_2:
+	now = set_array[j];
+	j++;
+	if(j == array[i])
+        goto Section_2;
+	goto Section_4;
+
+Section 3:
+	set_array[] = 0x6032d0;
+
+Section_4:
+	(%rsp + i + 0x20) = now;
+	i++; //下一个参数
+	if(i == 6)
+        goto Part_3;
+
+Section_5:
+	if(array[i] <= 1)
+        goto Section_3;
+	j = 1;
+	set_array[] = 0x6032d0;
+	goto Section_2;
+```
+
+打印出 `0x6032d0` 处的值，为链表 {332,168,924,691,477,443}
+
+| %rsp+0x20       | %rsp+0x28       | %rsp+0x30       | %rsp+0x38       | %rsp+0x40       | %rsp+0x48       |
+| --------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
+| &node[array[1]] | &node[array[2]] | &node[array[3]] | &node[array[4]] | &node[array[5]] | &node[array[6]] |
+
+```assembly
+  4011ab: 48 8b 5c 24 20        mov    0x20(%rsp),%rbx
+  4011b0: 48 8d 44 24 28        lea    0x28(%rsp),%rax
+  4011b5: 48 8d 74 24 50        lea    0x50(%rsp),%rsi
+  4011ba: 48 89 d9              mov    %rbx,%rcx
+
+Section_1
+  4011bd: 48 8b 10              mov    (%rax),%rdx
+  4011c0: 48 89 51 08           mov    %rdx,0x8(%rcx)
+  4011c4: 48 83 c0 08           add    $0x8,%rax
+  4011c8: 48 39 f0              cmp    %rsi,%rax
+  4011cb: 74 05                 je     4011d2 <phase_6+0xde>
+  4011cd: 48 89 d1              mov    %rdx,%rcx
+  4011d0: eb eb                 jmp    4011bd <phase_6+0xc9>
+
+Section_2
+  4011d2: 48 c7 42 08 00 00 00  movq   $0x0,0x8(%rdx)
+  4011d9: 00 
+  4011da: bd 05 00 00 00        mov    $0x5,%ebp
+  
+Section_3
+  4011df: 48 8b 43 08           mov    0x8(%rbx),%rax
+  4011e3: 8b 00                 mov    (%rax),%eax
+  4011e5: 39 03                 cmp    %eax,(%rbx)
+  4011e7: 7d 05                 jge    4011ee <phase_6+0xfa>
+  4011e9: e8 4c 02 00 00        callq  40143a <explode_bomb>
+  4011ee: 48 8b 5b 08           mov    0x8(%rbx),%rbx
+  4011f2: 83 ed 01              sub    $0x1,%ebp
+  4011f5: 75 e8                 jne    4011df <phase_6+0xeb>
+  4011f7: 48 83 c4 50           add    $0x50,%rsp
+```
+
+
+
+```c
+i = 0;
+j = 1;
+%rcx = i;
+
+Section_1:
+    array[j] = &array[j];
+    j++;
+    if(j == 5)
+        goto Section_2;
+    %rcx = array[j];
+    goto Section_1;
+Section_2:
+    (%rdx+8)=0;
+    n = 5;
+
+Section_3:
+    if(array[i] >= array[i+1]) // 必须为降序
+        explode();
+    i++;
+    n--;
+    if(n != 0)
+        goto Section_3;
+    return;
+```
+
+将node的值，按降序放置，即{924(node_3),691(node_4),477(node_5),443(node_6),332(node_1),168(node_2)}
+
+顺序为 `3,4,5,6,1,2`
+
+进行7减操作，要求输入参数为：`4 3 2 1 6 5`
