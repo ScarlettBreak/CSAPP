@@ -1,4 +1,22 @@
-[TOC]
+Table of Contents
+
+=================
+
+
+
+   \* [phase_3](#phase_3)
+
+   \* [phase_4](#phase_4)
+
+   \* [phase_5](#phase_5)
+
+   \* [phase_6](#phase_6)
+
+   \* [总结](#总结)
+
+​      \* [对于汇编语言](#对于汇编语言)
+
+​      \* [技能](#技能)
 
 # phase_3
 
@@ -422,3 +440,22 @@ Section_3:
 顺序为 `3,4,5,6,1,2`
 
 进行7减操作，要求输入参数为：`4 3 2 1 6 5`
+
+# 总结
+
+## 对于汇编语言
+
+1. 想写出对应的伪代码结构，观察 `jmp` 等跳转指令是灵魂，在跳转的位置上分段，结合C 的 `goto`，可以很快的写出结构。
+2. 观察一些 `+=1,2,4` 的寄存器，其往往充当的是循环变量 `i,j,k` 的作用，用这些符号全部替换之后可以简化代码。
+3. 利用编辑器观察寄存器的使用情况（在`sublime`中选中变量，它出现的地方就会高亮）：出现次数、位置，在确定不会有影响的情况下合并代码。
+4. C 中的数组，在汇编代码中的表示，注意寻址模式的使用，`0x8(%rbx)`可能表示的是 `array[i]`，而 `%rbx`可能表示的是 `&array`（简单粗暴的表示：带括号表示数组值，不带括号表示数组地址）。
+
+## 技能
+
+如 lab2说明：
+
+> One of the nice side-effects of doing the lab is that you will get very good at using a debugger. This is a crucial skill that will pay big dividends the rest of your career.
+
+学会了很多 gdb 调试技巧，对寄存器的使用、过程中的机制（传递控制，传递数据，分配和释放内存）、指针和汇编语言有了更深刻的认识。
+
+CMU 的课程实验很有意思啊，很强，CSAPP 还要继续加油鸭~
